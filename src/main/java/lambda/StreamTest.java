@@ -324,7 +324,7 @@ public class StreamTest {
 	}
 
 	/**
-	 * Demo the corret usage of Optional<T>, the key points are ifPresent, orElse, orElseGet and orElseThrow.
+	 * Demo the correct usage of Optional<T>, the key points are ifPresent, orElse, orElseGet and orElseThrow.
 	 * 
 	 * ifPresent receives a Consumer.
 	 * orElse receives a parameter in target type.
