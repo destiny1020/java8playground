@@ -5,27 +5,42 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 
-public class StreamTest {
+import utils.Person;
+
+public class StreamExamples {
 
 	private Consumer<Object> print = System.out::println;
+	private IntConsumer intPrint = System.out::println;
+
+	private static Person[] persons = new Person[] { new Person(1, "Destiny"),
+			new Person(2, "Aslan"), new Person(3, "Kira"),
+			new Person(4, "Rezel") };
 
 	// 0.072s
 	@Test
@@ -518,5 +533,230 @@ public class StreamTest {
 		System.out.println(summary.getSum());
 		System.out.println(summary.getMax());
 		System.out.println(summary.getMin());
+	}
+
+	/**
+	 * Demo how to use the Collectors.map method to get mapping structure based on objects.
+	 * 
+	 * Since the value is itself in most cases, the second parameter should be Function.identity().
+	 * 
+	 * Underhood, it will use toMap(keyMapper, valueMapper, throwingMerger(), HashMap::new).
+	 * The throwingMerger() will not allow duplicated keys by throwing IllegalStateException.
+	 */
+	@Test
+	public void demoCollectorsMap() {
+		Map<Integer, Person> personMappings = Arrays.asList(persons).stream()
+				.collect(Collectors.toMap(Person::getId, Function.identity()));
+
+		System.out.println(personMappings);
+	}
+
+	/**
+	 * Demo how to use the Collectors.mao method with Merger.
+	 * 
+	 * The Merger is a BinaryOperator Functional Interface, which is a specialization of BiFunction.
+	 * It will determine the behaviors when there are duplicated keys.
+	 */
+	@Test
+	public void demoCollectorsMapWithMerger() {
+		// override the original person whose id is 2
+		persons[1] = new Person(1, "Fake Destiny");
+
+		// replace the old record with the new one
+		Map<Integer, Person> personMappings = Arrays
+				.asList(persons)
+				.stream()
+				.collect(
+						Collectors.toMap(Person::getId, Function.identity(), (
+								existingValue, newValue) -> newValue));
+
+		// {1=1-Fake Destiny, 3=3-Kira, 4=4-Rezel}
+		System.out.println(personMappings);
+	}
+
+	/**
+	 * Demo how to use the Collectors.toConcurrentMap. The underlying combiner is ConcurrentHashMap,
+	 * while in Collectors.toMap, it is using HashMap.
+	 * 
+	 * When using in a concurrent manner, shared the underlying ConcurrentMap is more efficient than
+	 * maintaining threads' own ConcurrentMap.
+	 */
+	@Test
+	public void demoCollectorsConcurrentMap() {
+
+		ConcurrentMap<Integer, Person> sharedHolder = new ConcurrentHashMap<>();
+		Supplier<ConcurrentMap<Integer, Person>> supplier = () -> sharedHolder;
+
+		Map<Integer, Person> personMappings = Arrays
+				.asList(persons)
+				.parallelStream()
+				.collect(
+						Collectors.toConcurrentMap(Person::getId,
+								Function.identity(),
+								(exsitingValue, newValue) -> newValue, supplier));
+
+		// {1=1-Destiny, 2=2-Aslan, 3=3-Kira, 4=4-Rezel}
+		System.out.println(personMappings);
+	}
+
+	/**
+	 * Demo how to use the Collectors.groupingBy to get a nested collection with:
+	 * Key -> Set/List
+	 * 
+	 * The first parameter passed in groupingBy is a Classifier. The returned values are the keys to the final mapping.
+	 */
+	@Test
+	public void demoCollectorsGrouping() {
+		Map<String, List<Locale>> localeMappings = Arrays
+				.asList(Locale.getAvailableLocales()).stream()
+				.collect(Collectors.groupingBy(Locale::getCountry));
+
+		System.out.println(localeMappings.get(Locale.CHINA.getCountry()));
+	}
+
+	/**
+	 * By default, the groupingBy will group the values to a list, but after assigning the Downstream Collector,
+	 * the list can be replaced to set.
+	 * 
+	 * Besides, the downstream collector can be other methods like: Collectors.counting, summingXXX, maxBy/minBy, etc.
+	 * 
+	 * Pay special attention to the Collectors.mapping method, it can let us do some processing before collecting.
+	 */
+	@Test
+	public void demoCollectorsGroupingWithDownStreamCollector() {
+		List<Locale> locales = Arrays.asList(Locale.getAvailableLocales());
+
+		Map<String, Set<Locale>> localeMappings = locales.stream().collect(
+				Collectors.groupingBy(Locale::getCountry, Collectors.toSet()));
+
+		System.out.println(localeMappings);
+
+		// using counting() downstream collector
+		Map<String, Long> localeInfo = locales.stream()
+				.collect(
+						Collectors.groupingBy(Locale::getCountry,
+								Collectors.counting()));
+
+		System.out.println(localeInfo);
+
+		// using mapping to do some processing before using downstream collector
+		Map<String, Set<String>> localeLanguageInfo = locales.stream().collect(
+				Collectors.groupingBy(
+						Locale::getCountry,
+						Collectors.mapping(Locale::getLanguage,
+								Collectors.toSet())));
+
+		System.out.println(localeLanguageInfo);
+	}
+
+	/**
+	 * Collectors.reduce is seldom necessary, just like Stream.reduce. It is relatively low-level API.
+	 * 
+	 * There are always better solutions.
+	 */
+	@Test
+	public void demoCollectorsWithReduction() {
+		List<Locale> locales = Arrays.asList(Locale.getAvailableLocales());
+
+		// The first identity should be empty String because this parameter represents: "the type of the mapped values"
+		// or, it means the initial value for the reduction
+		Map<String, String> localesJoined = locales.stream().collect(
+				Collectors.groupingBy(Locale::getCountry, Collectors.reducing(
+						"", Locale::getLanguage, (x, y) -> x.length() == 0 ? y
+								: x + ", " + y)));
+
+		System.out.println(localesJoined);
+
+		// since the above operation on downstream collector is really convoluted
+		// it should be replaced with more clear and concise operation, like below
+		Map<String, String> betterLocalesJoined = locales.stream().collect(
+				Collectors.groupingBy(
+						Locale::getCountry,
+						Collectors.mapping(Locale::getLanguage,
+								Collectors.joining(", "))));
+
+		System.out.println(betterLocalesJoined);
+	}
+
+	/**
+	 * When the Classifier for the groupingBy is effectively Predicate, the grouping behavior
+	 * is in fact a partitioning behavior, so in this case, should use partitioningBy instead of
+	 * groupingBy. 
+	 * 
+	 * Below demo will collect all locales with English available.
+	 * 
+	 * Like groupingBy, the partitioningBy also supports the Downstream Collectors as illustrated above.
+	 */
+	@Test
+	public void demoCollectorsPartitioning() {
+		Map<Boolean, List<Locale>> localeMappings = Arrays
+				.asList(Locale.getAvailableLocales())
+				.stream()
+				.collect(
+						Collectors.partitioningBy((Locale l) -> l.getLanguage()
+								.equals("en")));
+
+		System.out.println(localeMappings.get(true));
+	}
+
+	/**
+	 * Show a better way to generate sequence of Integers or Longs.
+	 */
+	@Test
+	public void demoPrimitiveStreamRange() {
+		IntStream zeroToNine = IntStream.range(0, 10);
+
+		// the forEach method will accept a Function Interface of type IntConsumer, which is not a generic type and dedicated to primitive int.
+		zeroToNine.forEach(intPrint);
+
+		System.out.println();
+
+		IntStream zeroToTen = IntStream.rangeClosed(0, 10);
+
+		zeroToTen.forEach(intPrint);
+	}
+
+	/**
+	 * Convert Object Stream to Primitive Stream.
+	 */
+	@Test
+	public void demoConvertBetweenPrimitiveStream() {
+		List<String> names = Arrays.asList("Destiny", "ReZEL", "Aegis",
+				"Buster", "Strike");
+
+		IntStream namesLengths = names.stream().mapToInt(String::length);
+
+		namesLengths.forEach(intPrint);
+
+		// convert IntStream to Object Stream, using the boxed method to convert to Stream of Integers.
+		List<String> convertedNames = IntStream.range(0, 10).boxed()
+				.map(i -> "The " + i).collect(Collectors.toList());
+
+		convertedNames.stream().forEach(print);
+	}
+
+	/**
+	 * Demo the conception of Non-Interference.
+	 * See http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#NonInterference for details.
+	 */
+	@Test
+	public void demoNonInterference() {
+		List<String> l = new ArrayList<>(Arrays.asList("one", "two"));
+		Stream<String> sl = l.stream();
+
+		// this operation is acceptable since it done before the terminal operation
+		l.add("three");
+
+		// the terminal operation
+		String s = sl.collect(Collectors.joining(" "));
+
+		// not effective since the terminal operation has been executed
+		l.remove(0);
+
+		// one two three
+		System.out.println(s);
+
+		System.out.println(l);
+
 	}
 }
