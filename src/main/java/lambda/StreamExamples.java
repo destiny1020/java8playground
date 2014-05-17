@@ -35,8 +35,8 @@ import utils.Person;
 
 public class StreamExamples {
 
-	private Consumer<Object> print = System.out::println;
-	private IntConsumer intPrint = System.out::println;
+	private final Consumer<Object> print = System.out::println;
+	private final IntConsumer intPrint = System.out::println;
 
 	private static Person[] persons = new Person[] { new Person(1, "Destiny"),
 			new Person(2, "Aslan"), new Person(3, "Kira"),
@@ -226,9 +226,9 @@ public class StreamExamples {
 	/**
 	 * Demo how to use peek method in Stream API, this method's main goal is debugging.
 	 * Must call the last forEach as a terminal operation to see the effects of peek.
-	 * 
+	 *
 	 * After a terminal operation has been applied, the stream ceases to be usable.
-	 * 
+	 *
 	 * The peek method will not cease the usage of the underlying Stream, but the terminal methods like
 	 * forEach and forEachOrdered will. So if you want to reuse the stream, peek maybe your choice.
 	 * Since peek and forEach accepts the same Consumer<T>.
@@ -244,7 +244,7 @@ public class StreamExamples {
 	}
 
 	/**
-	 * Demo how to use distinct, it is a STATEFUL transformation since distinct needs to 
+	 * Demo how to use distinct, it is a STATEFUL transformation since distinct needs to
 	 * remember the previous elements.
 	 */
 	@Test
@@ -255,9 +255,9 @@ public class StreamExamples {
 	/**
 	 * Demo how to use sorted in two ways, it is a STATEFUL transformation since sorting
 	 * needs to remember all the previous elements.
-	 * 
+	 *
 	 * After a terminal operation has been applied, the stream ceases to be usable.
-	 * 
+	 *
 	 * At the same time, the usage of Comparator.comparing and Comparator.reversed has been shown.
 	 */
 	@Test
@@ -267,7 +267,8 @@ public class StreamExamples {
 
 		System.out.println();
 
-		// underhood: (c1, c2) -> keyExtractor.apply(c1).compareTo(keyExtractor.apply(c2))
+		// underhood: (c1, c2) ->
+		// keyExtractor.apply(c1).compareTo(keyExtractor.apply(c2))
 		Stream.of("Mike", "Jim", "Green", "Valkyrie")
 				.sorted(Comparator.comparing(String::length)).forEach(print);
 
@@ -306,9 +307,9 @@ public class StreamExamples {
 
 	/**
 	 * Show the usage of findAny and Optional Type.
-	 * 
-	 * NOTICE: The result for each invocation with the combination of parallel() and findAny() 
-	 * maybe different. 
+	 *
+	 * NOTICE: The result for each invocation with the combination of parallel() and findAny()
+	 * maybe different.
 	 */
 	@Test
 	public void demoFindAnyAndOptional() {
@@ -320,7 +321,7 @@ public class StreamExamples {
 	}
 
 	/**
-	 * Show the usage of anyMatch, allMatch and noneMatch, they will receive a Predicate as the parameter, 
+	 * Show the usage of anyMatch, allMatch and noneMatch, they will receive a Predicate as the parameter,
 	 * so they act like a filter. It can be combined with parallel as well to accelerate the process.
 	 */
 	@Test
@@ -340,7 +341,7 @@ public class StreamExamples {
 
 	/**
 	 * Demo the correct usage of Optional<T>, the key points are ifPresent, orElse, orElseGet and orElseThrow.
-	 * 
+	 *
 	 * ifPresent receives a Consumer.
 	 * orElse receives a parameter in target type.
 	 * orElseGet receives a Supplier.
@@ -384,10 +385,10 @@ public class StreamExamples {
 	}
 
 	/**
-	 * The Optional.flatMap method works in the same way as Stream.flatMap if you consider an optional value 
+	 * The Optional.flatMap method works in the same way as Stream.flatMap if you consider an optional value
 	 * to be a stream of size zero or one.
-	 * 
-	 * This method is similar to map(Function), but the provided mapper is one whose result is already an Optional, 
+	 *
+	 * This method is similar to map(Function), but the provided mapper is one whose result is already an Optional,
 	 * and if invoked, flatMap does not wrap it with an additional Optional.
 	 */
 	@Test
@@ -411,13 +412,13 @@ public class StreamExamples {
 	}
 
 	/**
-	 * In general, if the reduce method has a reduction operation op, 
-	 * the reduction yields v0 op v1 op v2 op ..., 
-	 * where we write vi op vi + 1 for the function call op(vi, vi + 1). 
-	 * 
-	 * The operation should be associative: It shouldn’t matter in which order you combine the elements. 
-	 * In math notation, (x op y) op z = x op (y op z). 
-	 * 
+	 * In general, if the reduce method has a reduction operation op,
+	 * the reduction yields v0 op v1 op v2 op ...,
+	 * where we write vi op vi + 1 for the function call op(vi, vi + 1).
+	 *
+	 * The operation should be associative: It shouldn’t matter in which order you combine the elements.
+	 * In math notation, (x op y) op z = x op (y op z).
+	 *
 	 * This allows efficient reduction with parallel streams.
 	 */
 	@Test
@@ -429,18 +430,18 @@ public class StreamExamples {
 	}
 
 	/**
-	 * BiFunction, abstracts the operation of receiving two parameters and return one result. 
+	 * BiFunction, abstracts the operation of receiving two parameters and return one result.
 	 * So it has three generic types defined.
-	 * 
+	 *
 	 * BinaryOperator, a specialization of BiFunction, which the three generic types are the same.
 	 * So it has only one generic type.
-	 * 
+	 *
 	 * The ACCUMULATOR is for gathering the partial results.
 	 * The COMBINER is for combining all the partial results accumulated. It is used when the Parallel
 	 * mechanism is enabled.
-	 * 
+	 *
 	 * But as it is, this kind of REDUCE operation is seldom used. We can always use something as below to replace:
-	 * 
+	 *
 	 * Optional<Integer> sum = names.mapToInt(String::length).sum();
 	 */
 	@Test
@@ -457,9 +458,9 @@ public class StreamExamples {
 
 	/**
 	 * Show how to collect the results into array.
-	 * Since it is not possible to create a generic array at runtime, 
-	 * the expression stream.toArray() returns an Object[] array. 
-	 * 
+	 * Since it is not possible to create a generic array at runtime,
+	 * the expression stream.toArray() returns an Object[] array.
+	 *
 	 * If you want an array of the correct type, pass in the array constructor, like below.
 	 */
 	@Test
@@ -473,14 +474,14 @@ public class StreamExamples {
 
 	/**
 	 * Show how the general collect works.
-	 * 
+	 *
 	 * It should receive THREE parameters:
-	 * 1. Supplier, to provide a container for each thread. 
+	 * 1. Supplier, to provide a container for each thread.
 	 *    Since sometimes the stream is handled concurrently, so each thread should be provided with its own container,
 	 *    to overcome the problems of synchronization.
 	 * 2. Accumulator, to tell the working thread how to operate on the container provided by Supplier.
 	 * 3. Combiner, to tell the threads how to merge their partial results into the final one.
-	 * 
+	 *
 	 * But as it is, this method is somehow low-level, and should be replace by something like below:
 	 *    stream.parallel().collect(Collectors.toSet())
 	 *    OR
@@ -515,9 +516,9 @@ public class StreamExamples {
 
 	/**
 	 * Show how to use the summary statictics for types: Integer, Long and Double.
-	 * 
+	 *
 	 * Below will just show the Integer, other two types are almost the same.
-	 * 
+	 *
 	 * For Collectors.summarizingInt method, it expects ToIntFunction Functional Interface,
 	 * this FI will apply any passed in parameter to get its integer value.
 	 */
@@ -537,9 +538,9 @@ public class StreamExamples {
 
 	/**
 	 * Demo how to use the Collectors.map method to get mapping structure based on objects.
-	 * 
+	 *
 	 * Since the value is itself in most cases, the second parameter should be Function.identity().
-	 * 
+	 *
 	 * Underhood, it will use toMap(keyMapper, valueMapper, throwingMerger(), HashMap::new).
 	 * The throwingMerger() will not allow duplicated keys by throwing IllegalStateException.
 	 */
@@ -553,7 +554,7 @@ public class StreamExamples {
 
 	/**
 	 * Demo how to use the Collectors.mao method with Merger.
-	 * 
+	 *
 	 * The Merger is a BinaryOperator Functional Interface, which is a specialization of BiFunction.
 	 * It will determine the behaviors when there are duplicated keys.
 	 */
@@ -577,7 +578,7 @@ public class StreamExamples {
 	/**
 	 * Demo how to use the Collectors.toConcurrentMap. The underlying combiner is ConcurrentHashMap,
 	 * while in Collectors.toMap, it is using HashMap.
-	 * 
+	 *
 	 * When using in a concurrent manner, shared the underlying ConcurrentMap is more efficient than
 	 * maintaining threads' own ConcurrentMap.
 	 */
@@ -602,7 +603,7 @@ public class StreamExamples {
 	/**
 	 * Demo how to use the Collectors.groupingBy to get a nested collection with:
 	 * Key -> Set/List
-	 * 
+	 *
 	 * The first parameter passed in groupingBy is a Classifier. The returned values are the keys to the final mapping.
 	 */
 	@Test
@@ -617,9 +618,9 @@ public class StreamExamples {
 	/**
 	 * By default, the groupingBy will group the values to a list, but after assigning the Downstream Collector,
 	 * the list can be replaced to set.
-	 * 
+	 *
 	 * Besides, the downstream collector can be other methods like: Collectors.counting, summingXXX, maxBy/minBy, etc.
-	 * 
+	 *
 	 * Pay special attention to the Collectors.mapping method, it can let us do some processing before collecting.
 	 */
 	@Test
@@ -651,14 +652,15 @@ public class StreamExamples {
 
 	/**
 	 * Collectors.reduce is seldom necessary, just like Stream.reduce. It is relatively low-level API.
-	 * 
+	 *
 	 * There are always better solutions.
 	 */
 	@Test
 	public void demoCollectorsWithReduction() {
 		List<Locale> locales = Arrays.asList(Locale.getAvailableLocales());
 
-		// The first identity should be empty String because this parameter represents: "the type of the mapped values"
+		// The first identity should be empty String because this parameter
+		// represents: "the type of the mapped values"
 		// or, it means the initial value for the reduction
 		Map<String, String> localesJoined = locales.stream().collect(
 				Collectors.groupingBy(Locale::getCountry, Collectors.reducing(
@@ -667,8 +669,10 @@ public class StreamExamples {
 
 		System.out.println(localesJoined);
 
-		// since the above operation on downstream collector is really convoluted
-		// it should be replaced with more clear and concise operation, like below
+		// since the above operation on downstream collector is really
+		// convoluted
+		// it should be replaced with more clear and concise operation, like
+		// below
 		Map<String, String> betterLocalesJoined = locales.stream().collect(
 				Collectors.groupingBy(
 						Locale::getCountry,
@@ -681,10 +685,10 @@ public class StreamExamples {
 	/**
 	 * When the Classifier for the groupingBy is effectively Predicate, the grouping behavior
 	 * is in fact a partitioning behavior, so in this case, should use partitioningBy instead of
-	 * groupingBy. 
-	 * 
+	 * groupingBy.
+	 *
 	 * Below demo will collect all locales with English available.
-	 * 
+	 *
 	 * Like groupingBy, the partitioningBy also supports the Downstream Collectors as illustrated above.
 	 */
 	@Test
@@ -706,7 +710,9 @@ public class StreamExamples {
 	public void demoPrimitiveStreamRange() {
 		IntStream zeroToNine = IntStream.range(0, 10);
 
-		// the forEach method will accept a Function Interface of type IntConsumer, which is not a generic type and dedicated to primitive int.
+		// the forEach method will accept a Function Interface of type
+		// IntConsumer, which is not a generic type and dedicated to primitive
+		// int.
 		zeroToNine.forEach(intPrint);
 
 		System.out.println();
@@ -728,7 +734,8 @@ public class StreamExamples {
 
 		namesLengths.forEach(intPrint);
 
-		// convert IntStream to Object Stream, using the boxed method to convert to Stream of Integers.
+		// convert IntStream to Object Stream, using the boxed method to convert
+		// to Stream of Integers.
 		List<String> convertedNames = IntStream.range(0, 10).boxed()
 				.map(i -> "The " + i).collect(Collectors.toList());
 
@@ -744,7 +751,8 @@ public class StreamExamples {
 		List<String> l = new ArrayList<>(Arrays.asList("one", "two"));
 		Stream<String> sl = l.stream();
 
-		// this operation is acceptable since it done before the terminal operation
+		// this operation is acceptable since it done before the terminal
+		// operation
 		l.add("three");
 
 		// the terminal operation
