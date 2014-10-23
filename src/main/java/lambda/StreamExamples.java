@@ -96,12 +96,14 @@ public class StreamExamples {
 	}
 
 	/**
-	 * Demostrate the usage of new API: Files.lines(path)
+	 * Demo the usage of new API: Files.lines(path)
 	 * Since Stream implements the AutoClosable, so it can be used in try-with-resources
 	 * @throws IOException
 	 */
 	@Test
 	public void demolinesInFiles() throws IOException {
+		// since the Stream is based on File reading, the stream should be closed after using
+		// Refer to: http://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html
 		try (Stream<String> lines = Files
 				.lines(Paths
 						.get("C:\\Users\\Ruixiang Jiang\\Downloads\\A sample book.txt"))) {
@@ -767,4 +769,5 @@ public class StreamExamples {
 		System.out.println(l);
 
 	}
+
 }
