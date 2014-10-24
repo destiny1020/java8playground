@@ -43,11 +43,11 @@ public class RodCutterLambda {
 		System.out.println(rodCutter.maxProfit(5));
 		System.out.println("Duration: "
 				+ (System.currentTimeMillis() - currentTime) / 1000.0);
-
-		currentTime = System.currentTimeMillis();
-		System.out.println(rodCutter.maxProfit(22));
-		System.out.println("Duration: "
-				+ (System.currentTimeMillis() - currentTime) / 1000.0);
+//
+//		currentTime = System.currentTimeMillis();
+//		System.out.println(rodCutter.maxProfit(22));
+//		System.out.println("Duration: "
+//				+ (System.currentTimeMillis() - currentTime) / 1000.0);
 
 		//		10
 		//		Duration: 0.116
